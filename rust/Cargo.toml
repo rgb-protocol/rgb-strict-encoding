@@ -19,7 +19,7 @@ name = "strict_encoding"
 amplify = { workspace = true, features = [
     "proc_attr",
 ] }
-bitcoin = { version = "0.32.7", optional = true }
+bitcoin = { version = "0.32.101", optional = true }
 serde_crate = { workspace = true, optional = true }
 rgb-strict-encoding-derive = { version = "1.0.1", path = "derive" }
 
@@ -29,8 +29,7 @@ amplify = { workspace = true, features = [
     "hex",
 ] }
 ciborium = "0.2.2"
-half = "<2.5.0"
-serde_json = "1.0.140"
+serde_json = "1"
 serde_yaml = "0.9.34"
 rgb-strict-encoding-test = { path = "./test_helpers" }
 
@@ -57,7 +56,6 @@ derive = []
 float = [
     "amplify/apfloat",
 ]
-half = [] # TODO: Remove this with major version update
 serde = [
     "serde_crate",
     "amplify/serde"
