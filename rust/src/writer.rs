@@ -420,7 +420,7 @@ impl<W: WriteRaw> UnionWriter<W> {
         assert!(
             self.defined_variant.insert(variant.clone(), variant_type).is_none(),
             "variant '{:#}' is already defined as a part of '{}'",
-            &variant,
+            variant,
             self.name()
         );
         self
@@ -429,13 +429,13 @@ impl<W: WriteRaw> UnionWriter<W> {
     fn _write_variant(mut self, name: VariantName, variant_type: VariantType) -> io::Result<Self> {
         let (variant, t) =
             self.defined_variant.iter().find(|(f, _)| f.name == name).unwrap_or_else(|| {
-                panic!("variant '{:#}' was not defined in '{}'", &name, self.name())
+                panic!("variant '{:#}' was not defined in '{}'", name, self.name())
             });
         assert_eq!(
             *t,
             variant_type,
             "variant '{:#}' in '{}' must be a {:?} while it is written as {:?}",
-            &variant,
+            variant,
             self.name(),
             t,
             variant_type
