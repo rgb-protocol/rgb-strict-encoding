@@ -490,7 +490,7 @@ dependencies = [
 
 [[package]]
 name = "rgb-strict-encoding"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "amplify",
  "bitcoin",
@@ -508,7 +508,7 @@ dependencies = [
 
 [[package]]
 name = "rgb-strict-encoding-derive"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "amplify",
  "amplify_syn",
@@ -522,7 +522,7 @@ dependencies = [
 
 [[package]]
 name = "rgb-strict-encoding-test"
-version = "1.0.1"
+version = "1.0.2"
 dependencies = [
  "amplify",
  "rgb-strict-encoding",

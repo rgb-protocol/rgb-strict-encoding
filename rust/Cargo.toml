@@ -21,7 +21,7 @@ amplify = { workspace = true, features = [
 ] }
 bitcoin = { version = "0.32.101", optional = true }
 serde_crate = { workspace = true, optional = true }
-rgb-strict-encoding-derive = { version = "1.0.1", path = "derive" }
+rgb-strict-encoding-derive = { version = "1.0.2", path = "derive" }
 
 [dev-dependencies]
 amplify = { workspace = true, features = [
