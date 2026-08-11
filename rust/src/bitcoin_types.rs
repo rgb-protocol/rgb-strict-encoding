@@ -28,8 +28,8 @@ pub use bitcoin::key::TweakedPublicKey;
 pub use bitcoin::taproot::{LeafScript, LeafVersion};
 pub use bitcoin::transaction::Version;
 pub use bitcoin::{
-    Amount, CompressedPublicKey, OutPoint, PublicKey, ScriptBuf, Sequence, TapNodeHash,
-    Transaction, TxIn, TxOut, Txid, Witness, XOnlyPublicKey,
+    Amount, BlockHash, CompressedPublicKey, OutPoint, PublicKey, ScriptBuf, Sequence, TapNodeHash,
+    Transaction, TxIn, TxMerkleNode, TxOut, Txid, Witness, XOnlyPublicKey,
 };
 
 use crate::traits::{ReadStruct, ReadTuple, WriteStruct, WriteTuple};
@@ -108,6 +108,74 @@ impl StrictDecode for ChainHash {
 
 impl StrictSerialize for ChainHash {}
 impl StrictDeserialize for ChainHash {}
+
+impl StrictDumb for BlockHash {
+    fn strict_dumb() -> Self { BlockHash::all_zeros() }
+}
+
+impl StrictProduct for BlockHash {}
+
+impl StrictType for BlockHash {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_BITCOIN;
+    fn strict_name() -> Option<TypeName> { Some(tn!("BlockHash")) }
+}
+
+impl StrictTuple for BlockHash {
+    const FIELD_COUNT: u8 = 1;
+}
+
+impl StrictEncode for BlockHash {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let confined = Bytes32::from_array(self.to_byte_array());
+        writer.write_newtype::<Self>(&confined)
+    }
+}
+
+impl StrictDecode for BlockHash {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            Ok(BlockHash::from_byte_array(bytes.to_byte_array()))
+        })
+    }
+}
+
+impl StrictSerialize for BlockHash {}
+impl StrictDeserialize for BlockHash {}
+
+impl StrictDumb for TxMerkleNode {
+    fn strict_dumb() -> Self { TxMerkleNode::all_zeros() }
+}
+
+impl StrictProduct for TxMerkleNode {}
+
+impl StrictType for TxMerkleNode {
+    const STRICT_LIB_NAME: &'static str = LIB_NAME_BITCOIN;
+    fn strict_name() -> Option<TypeName> { Some(tn!("TxMerkleNode")) }
+}
+
+impl StrictTuple for TxMerkleNode {
+    const FIELD_COUNT: u8 = 1;
+}
+
+impl StrictEncode for TxMerkleNode {
+    fn strict_encode<W: TypedWrite>(&self, writer: W) -> io::Result<W> {
+        let confined = Bytes32::from_array(self.to_byte_array());
+        writer.write_newtype::<Self>(&confined)
+    }
+}
+
+impl StrictDecode for TxMerkleNode {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        reader.read_tuple(|r| {
+            let bytes: Bytes32 = r.read_field()?;
+            Ok(TxMerkleNode::from_byte_array(bytes.to_byte_array()))
+        })
+    }
+}
+
+impl StrictSerialize for TxMerkleNode {}
+impl StrictDeserialize for TxMerkleNode {}
 
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug, Display, From)]
 #[derive(StrictType, StrictDumb, StrictEncode, StrictDecode)]
