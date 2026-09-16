@@ -9,7 +9,6 @@ repository = { workspace = true }
 edition = { workspace = true }
 license = { workspace = true }
 rust-version = { workspace = true }
-readme = "README.md"
 
 [lib]
 name = "strict_encoding_derive"
