@@ -29,7 +29,7 @@
     //dead_code,
     //missing_docs
 )]
-#![cfg_attr(docsrs, feature(doc_auto_cfg))]
+#![cfg_attr(docsrs, feature(doc_cfg))]
 
 #[cfg(feature = "derive")]
 pub use derive::{StrictDecode, StrictDumb, StrictEncode, StrictType};
