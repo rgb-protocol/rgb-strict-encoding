@@ -40,6 +40,14 @@ use crate::{
     WriteRaw, WriteTuple, WriteUnion, LIB_EMBEDDED,
 };
 
+/// Upper bound on how many elements to pre-allocate from an untrusted length
+/// prefix, so a forged prefix cannot trigger an unbounded allocation (DoS).
+#[inline]
+fn prealloc_cap<T>() -> usize {
+    const PREALLOC_BUDGET: usize = 1 << 16; // 64 KiB
+    (PREALLOC_BUDGET / core::mem::size_of::<T>().max(1)).max(1)
+}
+
 pub trait DecodeRawLe: Sized {
     fn decode_raw_le(reader: &mut (impl ReadRaw + ?Sized)) -> Result<Self, DecodeError>;
 }
@@ -526,7 +534,7 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
-        let mut col = Vec::<T>::with_capacity(len);
+        let mut col = Vec::<T>::with_capacity(len.min(prealloc_cap::<T>()));
         for _ in 0..len {
             col.push(StrictDecode::strict_decode(reader)?);
         }
@@ -565,7 +573,7 @@ impl<T: StrictDecode, const MIN_LEN: usize, const MAX_LEN: usize> StrictDecode
 {
     fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
         let len = unsafe { reader.raw_reader().read_raw_len::<MAX_LEN>()? };
-        let mut col = VecDeque::<T>::with_capacity(len);
+        let mut col = VecDeque::<T>::with_capacity(len.min(prealloc_cap::<T>()));
         for _ in 0..len {
             col.push_back(StrictDecode::strict_decode(reader)?);
         }
