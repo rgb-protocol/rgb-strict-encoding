@@ -276,6 +276,55 @@ impl<T: StrictDecode> StrictDecode for Option<T> {
     }
 }
 
+/// A single Unicode scalar value, encoded as its 1 to 4 raw UTF-8 bytes with no length prefix:
+/// the leading byte tells how many continuation bytes follow.
+///
+/// A list of bare `char`s has the semantic type of a Unicode string, which is encoded with a byte
+/// length prefix instead; wrap the `char` in a named type to make a list of characters.
+impl StrictType for char {
+    const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
+    fn strict_name() -> Option<TypeName> { None }
+}
+impl StrictEncode for char {
+    fn strict_encode<W: TypedWrite>(&self, mut writer: W) -> io::Result<W> {
+        let mut buf = [0u8; 4];
+        let bytes = self.encode_utf8(&mut buf).as_bytes();
+        unsafe {
+            writer = writer.register_unicode_char();
+            writer.raw_writer().write_raw::<4>(bytes)?;
+        }
+        Ok(writer)
+    }
+}
+impl StrictDecode for char {
+    fn strict_decode(reader: &mut impl TypedRead) -> Result<Self, DecodeError> {
+        let reader = unsafe { reader.raw_reader() };
+        let [b0] = reader.read_raw_array::<1>()?;
+        let extra = match b0 {
+            0x00..=0x7F => 0,
+            0xC0..=0xDF => 1,
+            0xE0..=0xEF => 2,
+            0xF0..=0xF7 => 3,
+            _ => {
+                return Err(DecodeError::DataIntegrityError(format!(
+                    "invalid UTF-8 leading byte {b0:#04x} for a Unicode character"
+                )))
+            }
+        };
+        let mut buf = [b0, 0, 0, 0];
+        for byte in buf.iter_mut().take(extra + 1).skip(1) {
+            let [b] = reader.read_raw_array::<1>()?;
+            *byte = b;
+        }
+        let s = core::str::from_utf8(&buf[..=extra]).map_err(|e| {
+            DecodeError::DataIntegrityError(format!(
+                "invalid UTF-8 sequence for a Unicode character: {e}"
+            ))
+        })?;
+        Ok(s.chars().next().expect("non-empty UTF-8 sequence"))
+    }
+}
+
 impl StrictType for () {
     const STRICT_LIB_NAME: &'static str = LIB_EMBEDDED;
     fn strict_name() -> Option<TypeName> { None }
