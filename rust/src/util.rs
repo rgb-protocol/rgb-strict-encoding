@@ -84,7 +84,7 @@ impl Display for Sizing {
     }
 }
 
-#[derive(Clone, Eq, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 pub struct Variant {
     pub name: VariantName,
     pub tag: u8,
@@ -180,10 +180,6 @@ impl Variant {
     }
 }
 
-impl PartialEq for Variant {
-    fn eq(&self, other: &Self) -> bool { self.tag == other.tag || self.name == other.name }
-}
-
 impl PartialOrd for Variant {
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> { Some(self.cmp(other)) }
 }
@@ -197,10 +193,10 @@ impl Hash for Variant {
 
 impl Ord for Variant {
     fn cmp(&self, other: &Self) -> Ordering {
-        if self == other {
-            return Ordering::Equal;
-        }
-        self.tag.cmp(&other.tag)
+        // Order by tag first, then name.
+        // Tags are unique in valid types, so the tiebreaker is only necessary for
+        // consistency with Eq.
+        self.tag.cmp(&other.tag).then_with(|| self.name.cmp(&other.name))
     }
 }
 
@@ -239,5 +235,35 @@ mod test {
         let variant_str = serde_yaml::to_string(&variant_orig).unwrap();
         let variant_post: Variant = serde_yaml::from_str(&variant_str).unwrap();
         assert_eq!(variant_orig, variant_post);
+    }
+
+    #[test]
+    fn variant_eq_is_structural() {
+        let a0 = Variant::named(0, vname!("a"));
+        let b0 = Variant::named(0, vname!("b"));
+        let b1 = Variant::named(1, vname!("b"));
+
+        assert_ne!(a0, b0, "same tag, different name");
+        assert_ne!(b0, b1, "same name, different tag");
+        assert_ne!(a0, b1);
+        assert_eq!(a0, Variant::named(0, vname!("a")));
+
+        // ordering must agree with equality
+        assert_ne!(a0.cmp(&b0), std::cmp::Ordering::Equal);
+        assert_ne!(b0.cmp(&b1), std::cmp::Ordering::Equal);
+    }
+
+    #[test]
+    fn variant_ord_is_tag_major() {
+        // semantic type ids commit to variants in set order, which must stay the tag order
+        let set = [
+            Variant::named(2, vname!("m")),
+            Variant::named(0, vname!("z")),
+            Variant::named(1, vname!("a")),
+        ]
+        .into_iter()
+        .collect::<std::collections::BTreeSet<_>>();
+        let tags = set.iter().map(|v| v.tag).collect::<Vec<_>>();
+        assert_eq!(tags, vec![0, 1, 2]);
     }
 }
